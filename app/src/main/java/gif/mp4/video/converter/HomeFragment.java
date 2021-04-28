@@ -40,7 +40,6 @@ public class HomeFragment extends Fragment {
     View mView;
 
 
-
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
@@ -53,7 +52,6 @@ public class HomeFragment extends Fragment {
         initListeners();
 
 
-
         return view;
     }
 
@@ -61,6 +59,14 @@ public class HomeFragment extends Fragment {
         binding.btnCombineGifs.setOnClickListener(v -> {
             openFileSelectDialog();
         });
+
+        binding.btnSavedFiles.setOnClickListener(v -> {
+            goToSavedVideosPage();
+        });
+    }
+
+    private void goToSavedVideosPage() {
+        Navigation.findNavController(mView).navigate(R.id.action_HomeFragment_to_savedVideosFragment);
     }
 
     private void openFileSelectDialog() {
@@ -90,30 +96,20 @@ public class HomeFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.e(TAG, "onActivityResult: Got HEre");
-        Toast.makeText(getActivity(), "Got here", Toast.LENGTH_SHORT).show();
         if (requestCode == REQUEST_CODE_PICK
                 && resultCode == getActivity().RESULT_OK
                 && data != null) {
+
             if (data.getData() != null) {
-//                mInputUri1 = data.getData();
-//                mInputUri2 = null;
-//                mInputUri3 = null;
-                //   transcode();
-                Toast.makeText(getActivity(), "data = " + data.getData().toString(), Toast.LENGTH_SHORT).show();
+                selectedGifUrl.clear();
+                selectedGifUrl.add(data.getData());
             } else if (data.getClipData() != null) {
                 ClipData clipData = data.getClipData();
-                //   transcode();
-                    selectedGifUrl.clear();
+                selectedGifUrl.clear();
                 for (int i = 0; i < clipData.getItemCount(); i++) {
-                    try {
-                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), clipData.getItemAt(i).getUri());
-                        binding.imgLogo.setImageBitmap(bitmap);
-                        selectedGifUrl.add(clipData.getItemAt(i).getUri());
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
+                    selectedGifUrl.add(clipData.getItemAt(i).getUri());
+//                  Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), clipData.getItemAt(i).getUri());
+//                  binding.imgLogo.setImageBitmap(bitmap);
                 }
 
 

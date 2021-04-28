@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
@@ -35,6 +36,7 @@ import com.otaliastudios.gif.strategy.size.PassThroughResizer;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +63,7 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
     private long mStartTime;
     private boolean mIsCompressing;
     private Future<Void> mCompressionFuture;
+    private Uri internalUri;
 
     @Override
     public View onCreateView(
@@ -104,6 +107,14 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
             } else {
                 mCompressionFuture.cancel(true);
             }
+        });
+
+        binding.btnPlayVideo.setOnClickListener(v -> {
+            playVideo();
+        });
+
+        binding.btnShareVideo.setOnClickListener(v -> {
+            shareVideo(internalUri);
         });
     }
 
@@ -171,9 +182,6 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
                 break;
             case 2:
                 fraction = 0.5F;
-                break;
-            case 3:
-                fraction = 1F / 3F;
                 break;
             default:
                 fraction = 1F;
@@ -264,15 +272,14 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
         Log.e(TAG, "Compression took " + (SystemClock.uptimeMillis() - mStartTime) + "ms");
         onCompressionFinished(true, "Compressed video placed on " + mOutputFile);
         File file = mOutputFile;
-        String type = "video/mp4";
         Uri uri = FileProvider.getUriForFile(getActivity(),
                 FILE_PROVIDER_AUTHORITY, file);
-//        startActivity(new Intent(Intent.ACTION_VIEW)
-//                .setDataAndType(uri, type)
-//                .setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));
+        internalUri = uri;
+        saveVideo(uri);
 
-        //  saveVideo(uri);
-        shareVideo(uri);
+
+        binding.lySettings.setVisibility(View.GONE);
+        binding.lyDownload.setVisibility(View.VISIBLE);
     }
 
     private void shareVideo(Uri uri) {
@@ -322,50 +329,93 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
     private void saveVideo(Uri uri) {
 
         String videoFileName = "video_" + System.currentTimeMillis() + ".mp4";
+        FileOutputStream out = null;
 
-        ContentValues valuesvideos = new ContentValues();
-        valuesvideos.put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/" + "VidFolder");
-        valuesvideos.put(MediaStore.Video.Media.TITLE, videoFileName);
-        valuesvideos.put(MediaStore.Video.Media.DISPLAY_NAME, videoFileName);
-        valuesvideos.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-        valuesvideos.put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis() / 1000);
-        valuesvideos.put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis());
-        valuesvideos.put(MediaStore.Video.Media.IS_PENDING, 1);
-        final Uri collection = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
-        Uri uriSavedVideo = getActivity().getContentResolver().insert(collection, valuesvideos);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentValues valuesvideos = new ContentValues();
+            valuesvideos.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/GifToVideo");
+            valuesvideos.put(MediaStore.Video.Media.TITLE, videoFileName);
+            valuesvideos.put(MediaStore.Video.Media.DISPLAY_NAME, videoFileName);
+            valuesvideos.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+            valuesvideos.put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis() / 1000);
+            valuesvideos.put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis());
+            valuesvideos.put(MediaStore.Video.Media.IS_PENDING, 1);
+            final Uri collection = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+            Uri uriSavedVideo = getActivity().getContentResolver().insert(collection, valuesvideos);
 
+            ParcelFileDescriptor pfd = null;
+            try {
+                pfd = getActivity().getContentResolver().openFileDescriptor(uriSavedVideo, "w");
+                out = new FileOutputStream(pfd.getFileDescriptor());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
 
-        try {
-            ParcelFileDescriptor pfd = getActivity().getContentResolver().openFileDescriptor(uriSavedVideo, "w");
-            FileOutputStream out = new FileOutputStream(pfd.getFileDescriptor());
+            try {
+                InputStream inputStream = getActivity().getContentResolver().openInputStream(uri);
+                byte[] buf = new byte[8192];
+                int len;
+                while ((len = inputStream.read(buf)) > 0) {
 
-            InputStream inputStream = getActivity().getContentResolver().openInputStream(uri);
+                    out.write(buf, 0, len);
+                }
 
-
-            byte[] buf = new byte[8192];
-            int len;
-            while ((len = inputStream.read(buf)) > 0) {
-
-                out.write(buf, 0, len);
+                out.close();
+                inputStream.close();
+                pfd.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(getActivity(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
 
 
-            out.close();
-            inputStream.close();
-            pfd.close();
+            valuesvideos.clear();
+            valuesvideos.put(MediaStore.Video.Media.IS_PENDING, 0);
+            getActivity().getContentResolver().update(uriSavedVideo, valuesvideos, null, null);
 
+        } else {
+            File vidFIle = null;
+            try {
+                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES) + "/GifToVideo/");
+                if (!file.exists()) {
+                    file.mkdirs();
+                }
 
-        } catch (Exception e) {
+                String vidDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString() + "/GifToVideo";
+                 vidFIle = new File(vidDir, videoFileName);
+                out = new FileOutputStream(vidFIle);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
 
-            e.printStackTrace();
-            Toast.makeText(getActivity(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            try {
+                InputStream inputStream = getActivity().getContentResolver().openInputStream(uri);
+                byte[] buf = new byte[8192];
+                int len;
+                while ((len = inputStream.read(buf)) > 0) {
+
+                    out.write(buf, 0, len);
+                }
+
+                out.close();
+                inputStream.close();
+                Toast.makeText(getActivity(), "Saved Successfully"+vidFIle.getAbsolutePath(), Toast.LENGTH_LONG).show();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(getActivity(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         }
 
 
-        valuesvideos.clear();
-        valuesvideos.put(MediaStore.Video.Media.IS_PENDING, 0);
-        getActivity().getContentResolver().update(uriSavedVideo, valuesvideos, null, null);
+        binding.tvPath.setText(videoFileName);
+        binding.tvInfo.setText("Video was saved to  your gallery. \n  Open your GALLERY, then select VIDEO, then open the GIFTOVIDEO folder \n or Go to \n /My Files/Internal Storage/Movies/GifToVideo/" + videoFileName);
+    }
 
-        Toast.makeText(getActivity(), "Saved Successfully", Toast.LENGTH_SHORT).show();
+    private void playVideo() {
+        String type = "video/mp4";
+        startActivity(new Intent(Intent.ACTION_VIEW)
+                .setDataAndType(internalUri, type)
+                .setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));
     }
 }

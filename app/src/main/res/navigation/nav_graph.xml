@@ -14,6 +14,9 @@
         <action
             android:id="@+id/action_FirstFragment_to_GifMergeFragment"
             app:destination="@id/GifMergeFragment" />
+        <action
+            android:id="@+id/action_HomeFragment_to_savedVideosFragment"
+            app:destination="@id/savedVideosFragment" />
     </fragment>
     <fragment
         android:id="@+id/GifMergeFragment"
@@ -25,4 +28,9 @@
             android:id="@+id/action_GifMergeFragment_to_FirstFragment"
             app:destination="@id/HomeFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/savedVideosFragment"
+        android:name="gif.mp4.video.converter.SavedVideosFragment"
+        android:label="fragment_saved_videos"
+        tools:layout="@layout/fragment_saved_videos" />
 </navigation>
