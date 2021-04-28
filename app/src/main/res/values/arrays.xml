@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="frame_rate">
+        <item>20fps</item>
+        <item>24fps</item>
+        <item>30fps</item>
+        <item>36fps</item>
+        <item>40fps</item>
+        <item>60fps</item>
+    </string-array>
+    <string-array name="resolution">
+        <item>Default</item>
+        <item>0.8x</item>
+        <item>0.5x</item>
+        <item>0.33x</item>
+    </string-array>
+    <string-array name="aspect_ratio">
+        <item>Default</item>
+        <item>16:9</item>
+        <item>4:3</item>
+        <item>Square</item>
+    </string-array>
+    <string-array name="rotation">
+        <item>Default</item>
+        <item>90 degree</item>
+        <item>180 degree</item>
+        <item>270 degree</item>
+    </string-array>
+    <string-array name="playback_speed">
+        <item>1x</item>
+        <item>0.5x</item>
+        <item>2x</item>
+    </string-array>
+</resources>

@@ -1,0 +1,2 @@
+include ':app'
+rootProject.name = "Gif to Mp4 Video Converter"

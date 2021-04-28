@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/HomeFragment">
+
+    <fragment
+        android:id="@+id/HomeFragment"
+        android:name="gif.mp4.video.converter.HomeFragment"
+        android:label="@string/first_fragment_label"
+        tools:layout="@layout/fragment_home">
+
+        <action
+            android:id="@+id/action_FirstFragment_to_GifMergeFragment"
+            app:destination="@id/GifMergeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/GifMergeFragment"
+        android:name="gif.mp4.video.converter.GifMergeFragment"
+        android:label="@string/second_fragment_label"
+        tools:layout="@layout/fragment_gif_merge">
+
+        <action
+            android:id="@+id/action_GifMergeFragment_to_FirstFragment"
+            app:destination="@id/HomeFragment" />
+    </fragment>
+</navigation>
