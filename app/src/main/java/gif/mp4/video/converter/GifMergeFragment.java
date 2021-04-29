@@ -23,6 +23,14 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
 import com.otaliastudios.gif.GIFCompressor;
 import com.otaliastudios.gif.GIFListener;
 import com.otaliastudios.gif.GIFOptions;
@@ -64,6 +72,8 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
     private boolean mIsCompressing;
     private Future<Void> mCompressionFuture;
     private Uri internalUri;
+    private InterstitialAd mInterstitialAd;
+
 
     @Override
     public View onCreateView(
@@ -82,9 +92,38 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
 
 
         binding.progress.setMax(PROGRESS_BAR_MAX);
-
+        initAds();
 
         return view;
+    }
+
+    private void initAds() {
+
+        AdView mAdView = binding.adView;
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+        initInterstitialAds();
+    }
+
+    private void initInterstitialAds() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+
+        InterstitialAd.load(getActivity(),getResources().getString(R.string.interstitial_ads), adRequest, new InterstitialAdLoadCallback() {
+            @Override
+            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                // The mInterstitialAd reference will be null until
+                // an ad is loaded.
+                mInterstitialAd = interstitialAd;
+                Log.i(TAG, "onAdLoaded");
+            }
+
+            @Override
+            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                // Handle the error
+                Log.i(TAG, loadAdError.getMessage());
+                mInterstitialAd = null;
+            }
+        });
     }
 
     private void populateGifRecyclerView() {
@@ -382,7 +421,7 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
                 }
 
                 String vidDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).toString() + "/GifToVideo";
-                 vidFIle = new File(vidDir, videoFileName);
+                vidFIle = new File(vidDir, videoFileName);
                 out = new FileOutputStream(vidFIle);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -399,7 +438,7 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
 
                 out.close();
                 inputStream.close();
-                Toast.makeText(getActivity(), "Saved Successfully"+vidFIle.getAbsolutePath(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), "Saved Successfully" + vidFIle.getAbsolutePath(), Toast.LENGTH_LONG).show();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -410,6 +449,15 @@ public class GifMergeFragment extends Fragment implements GIFListener, AdapterVi
 
         binding.tvPath.setText(videoFileName);
         binding.tvInfo.setText("Video was saved to  your gallery. \n  Open your GALLERY, then select VIDEO, then open the GIFTOVIDEO folder \n or Go to \n /My Files/Internal Storage/Movies/GifToVideo/" + videoFileName);
+        showInterstitialAds();
+    }
+
+    private void showInterstitialAds() {
+        if (mInterstitialAd != null) {
+            mInterstitialAd.show(getActivity());
+        } else {
+            Log.d("TAG", "The interstitial ad wasn't ready yet.");
+        }
     }
 
     private void playVideo() {

@@ -16,6 +16,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+
 import java.util.ArrayList;
 
 import gif.mp4.video.converter.adapters.VideoAdapter;
@@ -36,7 +42,21 @@ public class SavedVideosFragment extends Fragment {
         binding = FragmentSavedVideosBinding.inflate(inflater, container, false);
         View view = binding.getRoot();
         videoList();
+        initAds();
         return view;
+    }
+
+    private void initAds() {
+        MobileAds.initialize(getActivity(), new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+
+        AdView mAdView = binding.adView;
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
     }
 
     public void videoList() {
@@ -54,6 +74,7 @@ public class SavedVideosFragment extends Fragment {
 
         Cursor cursor = contentResolver.query(uri, null, null, null, null);
 
+        videoArrayList.clear();
         //looping through all rows and adding to list
         if (cursor != null && cursor.moveToFirst()) {
             do {

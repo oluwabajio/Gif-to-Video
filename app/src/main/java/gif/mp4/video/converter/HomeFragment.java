@@ -21,6 +21,11 @@ import androidx.navigation.Navigation;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,11 +53,23 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View view = binding.getRoot();
         mView = view;
-
         initListeners();
-
+initAds();
 
         return view;
+    }
+
+    private void initAds() {
+        MobileAds.initialize(getActivity(), new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(InitializationStatus initializationStatus) {
+            }
+        });
+
+
+        AdView mAdView = binding.adView;
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
     }
 
     private void initListeners() {
@@ -66,7 +83,12 @@ public class HomeFragment extends Fragment {
     }
 
     private void goToSavedVideosPage() {
-        Navigation.findNavController(mView).navigate(R.id.action_HomeFragment_to_savedVideosFragment);
+        if (PermissionHelper.checkPermissions(getActivity())) {
+            Navigation.findNavController(mView).navigate(R.id.action_HomeFragment_to_savedVideosFragment);
+        } else {
+            PermissionHelper.requestPermissions(this);
+        }
+
     }
 
     private void openFileSelectDialog() {

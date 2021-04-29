@@ -11,4 +11,13 @@
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="test_banner_ads">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="banner_ads">ca-app-pub-2439901986027384/2705659357</string>
+    <string name="live_banner_ads">ca-app-pub-2439901986027384/2705659357</string>
+
+
+    <string name="test_interstitial_ads">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="interstitial_ads">ca-app-pub-2439901986027384/1383649453</string>
+    <string name="real_interstitial_ads">ca-app-pub-2439901986027384/1383649453</string>
 </resources>
