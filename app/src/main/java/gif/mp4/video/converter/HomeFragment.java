@@ -54,7 +54,7 @@ public class HomeFragment extends Fragment {
         View view = binding.getRoot();
         mView = view;
         initListeners();
-initAds();
+        initAds();
 
         return view;
     }
@@ -83,19 +83,28 @@ initAds();
     }
 
     private void goToSavedVideosPage() {
-        if (PermissionHelper.checkPermissions(getActivity())) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (PermissionHelper.checkPermissions(getActivity())) {
+                Navigation.findNavController(mView).navigate(R.id.action_HomeFragment_to_savedVideosFragment);
+            } else {
+                PermissionHelper.requestPermissions(this);
+            }
+        }else {
             Navigation.findNavController(mView).navigate(R.id.action_HomeFragment_to_savedVideosFragment);
-        } else {
-            PermissionHelper.requestPermissions(this);
+
         }
 
     }
 
     private void openFileSelectDialog() {
-        if (PermissionHelper.checkPermissions(getActivity())) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            if (PermissionHelper.checkPermissions(getActivity())) {
+                showFileSelectDialog();
+            } else {
+                PermissionHelper.requestPermissions(this);
+            }
+        }else {
             showFileSelectDialog();
-        } else {
-            PermissionHelper.requestPermissions(this);
         }
     }
 
